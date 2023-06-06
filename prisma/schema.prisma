@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["clientExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model fitness_center {
+  id      String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name    String   @db.VarChar(255)
+  user_id String   @db.Uuid
+  user    user     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  member  member[]
+}
+
+model health_advice {
+  id                String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  member_id         String @db.Uuid
+  health_advisor_id String @db.Uuid
+  advice_details    String
+  user              user   @relation(fields: [health_advisor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  member            member @relation(fields: [member_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model health_metric {
+  id           String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  member_id    String @db.Uuid
+  metric_name  String @db.VarChar(255)
+  metric_value Int
+  member       member @relation(fields: [member_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model member {
+  id                String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id           String          @db.Uuid
+  fitness_center_id String          @db.Uuid
+  health_advice     health_advice[]
+  health_metric     health_metric[]
+  fitness_center    fitness_center  @relation(fields: [fitness_center_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user              user            @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  workout_plan      workout_plan[]
+}
+
+model schedule {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String   @db.Uuid
+  start_time DateTime @db.Timestamp(6)
+  end_time   DateTime @db.Timestamp(6)
+  user       user     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model user {
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email          String           @unique @db.VarChar(255)
+  firstName      String?          @db.VarChar(255)
+  lastName       String?          @db.VarChar(255)
+  roq_user_id    String           @db.VarChar(255)
+  tenant_id      String           @db.VarChar(255)
+  fitness_center fitness_center[]
+  health_advice  health_advice[]
+  member         member[]
+  schedule       schedule[]
+  workout_plan   workout_plan[]
+}
+
+model workout_plan {
+  id                    String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  member_id             String @db.Uuid
+  fitness_instructor_id String @db.Uuid
+  plan_details          String
+  user                  user   @relation(fields: [fitness_instructor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  member                member @relation(fields: [member_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
